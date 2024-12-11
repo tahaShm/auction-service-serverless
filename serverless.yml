@@ -1,18 +1,19 @@
 service: sls-base
 
 plugins:
-  - serverless-pseudo-parameters
+    - serverless-pseudo-parameters
 
 provider:
-  name: aws
-  runtime: nodejs20.x
-  memorySize: 256
-  stage: ${opt:stage, 'dev'}
-  
+    name: aws
+    runtime: nodejs20.x
+    memorySize: 256
+    stage: ${opt:stage, 'dev'}
+    region: us-west-1
+
 functions:
-  hello:
-    handler: src/handlers/hello.handler
-    events:
-      - http:
-          method: GET
-          path: /hello
+    hello:
+        handler: src/handlers/hello.handler
+        events:
+            - http:
+                  method: GET
+                  path: /hello
