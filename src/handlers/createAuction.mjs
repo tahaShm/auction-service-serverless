@@ -1,10 +1,8 @@
 import { v4 as uuid } from "uuid";
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb"; // ES Modules import
 // const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb"); // CommonJS import
-import middy from "@middy/core";
 import httpJsonBodyParser from "@middy/http-json-body-parser";
-import httpEventNormalizer from "@middy/http-event-normalizer";
-import httpErrorHandler from "@middy/http-error-handler";
+import commonMiddleware from "../lib/commonMiddleware.mjs";
 import createError from "http-errors";
 
 const client = new DynamoDBClient();
@@ -43,7 +41,6 @@ async function createAuction(event, context) {
     };
 }
 
-export const handler = middy(createAuction)
-    .use(httpJsonBodyParser())
-    .use(httpEventNormalizer())
-    .use(httpErrorHandler());
+export const handler = commonMiddleware(createAuction).use(
+    httpJsonBodyParser()
+);
