@@ -15,7 +15,7 @@ async function createAuction(event, context) {
     };
 
     const command = new PutItemCommand({
-        TableName: "AuctionTable",
+        TableName: process.env.AUCTIONS_TABLE_NAME,
         Item: {
             id: { S: auction.id },
             title: { S: auction.title },

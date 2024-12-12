@@ -2,34 +2,19 @@ service: sls-base
 
 plugins:
     - serverless-pseudo-parameters
-
 provider:
     name: aws
     runtime: nodejs20.x
     memorySize: 256
     stage: ${opt:stage, 'dev'}
     region: us-west-1
+    environment:
+        AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
     iamRoleStatements:
-        - Effect: Allow
-          Action:
-            - dynamodb:PutItem
-          Resource:
-            - arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/AuctionTable
-
+        - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
 resources:
     Resources:
-        AuctionTable:
-            Type: AWS::DynamoDB::Table
-            Properties:
-                TableName: AuctionTable
-                BillingMode: PAY_PER_REQUEST
-                AttributeDefinitions:
-                    - AttributeName: id
-                      AttributeType: S
-                KeySchema:
-                    - AttributeName: id
-                      KeyType: HASH
-
+        AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
 functions:
     createAuction:
         handler: src/handlers/createAuction.handler
@@ -37,3 +22,9 @@ functions:
             - http:
                   method: POST
                   path: /auction
+custom:
+    AuctionsTable:
+        name: !Ref AuctionsTable
+        arn: !GetAtt AuctionsTable.Arn
+    bundle:
+        linting: false
