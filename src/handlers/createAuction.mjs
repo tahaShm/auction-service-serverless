@@ -2,7 +2,7 @@ import { v4 as uuid } from "uuid";
 import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb"; // ES Modules import
 // const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb"); // CommonJS import
 import httpJsonBodyParser from "@middy/http-json-body-parser";
-import commonMiddleware from "../lib/commonMiddleware.mjs";
+import mutateMiddleware from "../lib/mutateMiddleware.mjs";
 import createError from "http-errors";
 
 const client = new DynamoDBClient();
@@ -12,21 +12,17 @@ async function createAuction(event, context) {
     const now = new Date();
 
     const auction = {
-        id: uuid(),
-        title,
-        status: "OPEN",
-        createdAt: now.toISOString(),
-    };
-
-    const command = new PutItemCommand({
         TableName: process.env.AUCTIONS_TABLE_NAME,
         Item: {
-            id: { S: auction.id },
-            title: { S: auction.title },
-            status: { S: auction.status },
-            createdAt: { S: auction.createdAt },
+            id: { S: uuid() },
+            title: { S: title },
+            status: { S: "OPEN" },
+            createdAt: { S: now.toISOString() },
+            highestBid: { M: { amount: { N: "0" } } },
         },
-    });
+    };
+
+    const command = new PutItemCommand(auction);
 
     try {
         await client.send(command);
@@ -41,6 +37,4 @@ async function createAuction(event, context) {
     };
 }
 
-export const handler = commonMiddleware(createAuction).use(
-    httpJsonBodyParser()
-);
+export const handler = mutateMiddleware(createAuction);
