@@ -1,31 +1,33 @@
 import { v4 as uuid } from "uuid";
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb"; // ES Modules import
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb"; // ES Modules import
+import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 // const { DynamoDBClient, PutItemCommand } = require("@aws-sdk/client-dynamodb"); // CommonJS import
-import httpJsonBodyParser from "@middy/http-json-body-parser";
+
 import mutateMiddleware from "../lib/mutateMiddleware.mjs";
 import createError from "http-errors";
 
 const client = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(client);
 
 async function createAuction(event, context) {
     const { title } = event.body; // removed JSON.parse() as it's not needed with the httpJsonBodyParser() middleware
     const now = new Date();
 
     const auction = {
-        TableName: process.env.AUCTIONS_TABLE_NAME,
-        Item: {
-            id: { S: uuid() },
-            title: { S: title },
-            status: { S: "OPEN" },
-            createdAt: { S: now.toISOString() },
-            highestBid: { M: { amount: { N: "0" } } },
-        },
+        id: uuid(),
+        title,
+        status: "OPEN",
+        createdAt: now.toISOString(),
+        highestBid: { amount: 0 },
     };
 
-    const command = new PutItemCommand(auction);
-
     try {
-        await client.send(command);
+        const command = new PutCommand({
+            TableName: process.env.AUCTIONS_TABLE_NAME,
+            Item: auction,
+        });
+
+        await docClient.send(command);
     } catch (error) {
         console.error(error);
         throw new createError.InternalServerError(error); // reduces the overhead of creating a new error for each type of error

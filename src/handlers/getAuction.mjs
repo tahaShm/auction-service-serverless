@@ -1,21 +1,24 @@
 import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb"; // ES Modules import
+import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import commonMiddleware from "../lib/commonMiddleware.mjs";
 import createError from "http-errors";
 
 const client = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(client);
 
 async function getAuction(event, context) {
     let auction;
     const { id } = event.pathParameters;
 
     try {
-        const command = new GetItemCommand({
+        const command = new GetCommand({
             TableName: process.env.AUCTIONS_TABLE_NAME,
             Key: {
-                id: { S: id },
+                id,
             },
         });
-        const result = await client.send(command);
+
+        const result = await docClient.send(command);
 
         auction = result.Item;
     } catch (error) {

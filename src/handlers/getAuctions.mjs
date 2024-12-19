@@ -1,8 +1,10 @@
-import { DynamoDBClient, ScanCommand } from "@aws-sdk/client-dynamodb"; // ES Modules import
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb"; // ES Modules import
+import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
 import createError from "http-errors";
 import commonMiddleware from "../lib/commonMiddleware.mjs";
 
 const client = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(client);
 
 async function getAuctions(event, context) {
     let auctions;
@@ -11,7 +13,7 @@ async function getAuctions(event, context) {
         const command = new ScanCommand({
             TableName: process.env.AUCTIONS_TABLE_NAME,
         });
-        const results = await client.send(command);
+        const results = await docClient.send(command);
 
         auctions = results.Items;
     } catch (error) {

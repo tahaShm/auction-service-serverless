@@ -1,12 +1,10 @@
-import {
-    DynamoDBClient,
-    UpdateItemCommand,
-    ReturnValue,
-} from "@aws-sdk/client-dynamodb"; // ES Modules import
+import { DynamoDBClient, ReturnValue } from "@aws-sdk/client-dynamodb"; // ES Modules import
+import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import mutateMiddleware from "../lib/mutateMiddleware.mjs";
 import createError from "http-errors";
 
 const client = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(client);
 
 async function placeBid(event, context) {
     const { id } = event.pathParameters;
@@ -15,11 +13,11 @@ async function placeBid(event, context) {
     const params = {
         TableName: process.env.AUCTIONS_TABLE_NAME,
         Key: {
-            id: { S: id },
+            id,
         },
         UpdateExpression: "SET highestBid.amount = :amount",
         ExpressionAttributeValues: {
-            ":amount": { N: `${amount}` },
+            ":amount": amount,
         },
         ReturnValues: "ALL_NEW",
     };
@@ -27,8 +25,9 @@ async function placeBid(event, context) {
     let updatedAuction;
 
     try {
-        const command = new UpdateItemCommand(params);
-        const result = await client.send(command);
+        const command = new UpdateCommand(params);
+        const result = await docClient.send(command);
+
         updatedAuction = result.Attributes;
     } catch (error) {
         console.error(error);
