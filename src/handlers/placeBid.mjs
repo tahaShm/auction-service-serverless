@@ -1,8 +1,12 @@
 import { DynamoDBClient, ReturnValue } from "@aws-sdk/client-dynamodb"; // ES Modules import
 import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
-import mutateMiddleware from "../lib/mutateMiddleware.mjs";
+import validator from "@middy/validator";
+import { transpileSchema } from "@middy/validator/transpile";
 import createError from "http-errors";
+
+import mutateMiddleware from "../lib/mutateMiddleware.mjs";
 import { getAuctionById } from "./getAuction.mjs";
+import placeBidSchema from "../lib/schemas/placeBidSchema.mjs";
 
 const client = new DynamoDBClient();
 const docClient = DynamoDBDocumentClient.from(client);
@@ -56,4 +60,8 @@ async function placeBid(event, context) {
     };
 }
 
-export const handler = mutateMiddleware(placeBid);
+export const handler = mutateMiddleware(placeBid).use(
+    validator({
+        eventSchema: transpileSchema(placeBidSchema),
+    })
+);

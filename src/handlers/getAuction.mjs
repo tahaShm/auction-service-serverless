@@ -1,7 +1,9 @@
 import { DynamoDBClient, GetItemCommand } from "@aws-sdk/client-dynamodb"; // ES Modules import
 import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
-import commonMiddleware from "../lib/commonMiddleware.mjs";
 import createError from "http-errors";
+
+import commonMiddleware from "../lib/commonMiddleware.mjs";
+
 
 const client = new DynamoDBClient();
 const docClient = DynamoDBDocumentClient.from(client);
