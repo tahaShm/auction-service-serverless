@@ -14,6 +14,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 
 async function createAuction(event, context) {
     const { title } = event.body; // removed JSON.parse() as it's not needed with the httpJsonBodyParser() middleware
+    const { email } = event.requestContext.authorizer;
     const now = new Date();
     const endDate = new Date();
     endDate.setHours(now.getHours() + 1); // add 1 hour
@@ -25,6 +26,7 @@ async function createAuction(event, context) {
         createdAt: now.toISOString(),
         endingAt: endDate.toISOString(),
         highestBid: { amount: 0 },
+        seller: email,
     };
 
     try {
